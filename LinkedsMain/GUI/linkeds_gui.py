@@ -406,8 +406,9 @@ class AppWindow(MainWindowGui, StaticMethods):
         msgBox = StandardMessageBox(self.logo_image)
         msgBox.information('Информация', data.get('reason'))
         self.auto_login(False)
-        self.hide()
-        raise KeyboardInterrupt('GUI closed')
+        self.destroy()
+        self.main_work.client_window = WelcomeWindow(self.main_work)
+        self.main_work.client_window.show()
 
     @pyqtSlot()
     def set_user_data(self, data):

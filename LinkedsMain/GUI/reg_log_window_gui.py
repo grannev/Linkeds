@@ -76,7 +76,7 @@ class RegLogWindow(StandardWidget):
 
         pfp_path = APP_ROOT / "CACHE" / "pfp_image.png"
         if not pfp_path.exists():
-            pfp_path = APP_ROOT / "IMAGES" / "pfp_image_standard.png"
+            pfp_path = APP_ROOT / "IMAGES" / "default_pfp.png"
         self.userPfp_image = QtGui.QPixmap(str(pfp_path)).scaled(180, 180)
         self.userPfp_image = self.round_image(self.userPfp_image)
 
