@@ -13,6 +13,7 @@ from threading import Thread
 from request_handler import RequestHandler
 from LOGS.logger import init_logger
 from CONFIG.config_init import ensure_server_config
+from DATABASE.database_init import initialize_database
 
 ensure_server_config()
 
@@ -158,9 +159,10 @@ async def main():
 if __name__ == '__main__':
     logging.debug(msg=init_logger('server'))
     try:
+        initialize_database()
         db_check = Database()
-    except ConnectionError:
-        logging.error(msg='Can\'t connect to Database')
+    except Exception as error:
+        logging.error(msg=f'Can\'t initialize/connect to Database: {error}')
         exit()
     db_check.connect()
     for el in db_check.select(table_name='connection', subject='id'):
