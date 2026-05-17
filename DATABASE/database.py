@@ -241,7 +241,7 @@ class Database:
     def is_user_online(self, id: str) -> bool:
         ids = self.select(table_name='connection', subject='id')
         for el in ids:
-            if el.get('id') == id:
+            if str(el.get('id')) == str(id):
                 return True
         return False
 

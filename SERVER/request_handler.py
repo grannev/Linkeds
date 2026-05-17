@@ -2,8 +2,13 @@ import logging
 import os
 import pickle
 import time
+from pathlib import Path
 
 from DATABASE.database import Database
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_PFP_PATH = PROJECT_ROOT / "LinkedsMain" / "IMAGES" / "default_pfp.png"
 
 
 class RequestHandler:
@@ -98,7 +103,7 @@ class RequestHandler:
         registered_data = self.database.registrate_user(user_data)
         user_social = self.database.select(
             table_name='social', id=registered_data.get('id'))[0]
-        pfp_image = self.database.load_image('\\pfp_storage\\standard.png')
+        pfp_image = DEFAULT_PFP_PATH.read_bytes()
         self.database.save_image(user_social, 'pfp', pfp_image)
         return self.form_request('<REGISTRATION-SUCCESS>',
                                  {'user_data': registered_data, 'user_social': user_social})
@@ -134,7 +139,6 @@ class RequestHandler:
             return self.form_request(
                 '<ONLINE-DENIED>',
                 {'reason': 'Ваш аккаунт удалён!'})
-        self.database.update(id=user_data.get('id'), subject='online', subject_value='True')
         if self.database.is_user_online(user_data.get('id')):
             return self.form_request(
                 '<ONLINE-DENIED>',
@@ -143,6 +147,7 @@ class RequestHandler:
         self.database.insert(table_name='connection', subject_values=connection)
         self.database.update(table_name='connection', criterion='ip', id=f'{self.addr[0]}:{self.addr[1]}',
                              subject='user_data', subject_value=pickle.dumps(user_data))
+        self.database.update(id=user_data.get('id'), subject='online', subject_value='True')
         user_data = self.database.select(table_name='user', id=user_data.get('id'))[0]
         self.update_data_for_all_friends_online(user_data)
         return self.form_request('<SET-USER-DATA>', {'user_data': user_data})
