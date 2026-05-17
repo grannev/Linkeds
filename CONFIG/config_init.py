@@ -16,6 +16,7 @@ SERVER_PORT = 25565
 """
 
 CLIENT_CONFIG = SERVER_CONFIG
+AUTO_LOGIN = "False\n"
 
 
 def ensure_config(relative_path: str, content: str) -> None:
@@ -36,3 +37,7 @@ def ensure_server_config() -> None:
 
 def ensure_client_config() -> None:
     ensure_config('LinkedsMain/CLIENT/client_config.py', CLIENT_CONFIG)
+
+
+def ensure_client_cache() -> None:
+    ensure_config('LinkedsMain/CACHE/auto_login.txt', AUTO_LOGIN)

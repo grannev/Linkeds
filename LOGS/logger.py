@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from CONFIG.logs_config import *
 
 
@@ -29,6 +30,7 @@ class CustomFormatter(logging.Formatter):
 def init_logger(name):
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
+    Path(LOGS_PATH).mkdir(parents=True, exist_ok=True)
 
     format_handler = logging.StreamHandler()
     format_handler.setLevel(logging.DEBUG)

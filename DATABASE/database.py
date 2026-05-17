@@ -246,8 +246,9 @@ class Database:
         return False
 
     def save_image(self, user_social, image_type, image_bytes, post=None, chat=None) -> None:
-        current_path = '\\'.join(str(pathlib.Path().resolve()).split('\\')[:-1]) + '\\DATABASE'
-        path = current_path + f"\\{image_type}_storage\\{user_social.get('id')}.png"
+        current_path = pathlib.Path(__file__).resolve().parent
+        path = current_path / f"{image_type}_storage" / f"{user_social.get('id')}.png"
+        path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, 'wb') as image:
             image.write(image_bytes)
         if post is None and chat is None:
@@ -256,8 +257,9 @@ class Database:
 
     @staticmethod
     def load_image(image_path) -> bytes:
-        current_path = '\\'.join(str(pathlib.Path().resolve()).split('\\')[:-1]) + '\\DATABASE'
-        path = current_path + image_path
+        current_path = pathlib.Path(__file__).resolve().parent
+        normalized_path = str(image_path).replace('\\', '/').lstrip('/')
+        path = current_path / normalized_path
         with open(path, 'rb') as image:
             image_bytes = image.read()
         return image_bytes

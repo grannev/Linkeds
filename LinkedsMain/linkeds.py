@@ -9,13 +9,14 @@ sys.path.insert(0, str(project_root))
 from asyncio import Protocol, BaseProtocol
 from threading import Thread
 from PyQt6 import QtWidgets, QtCore, QtGui, QtMultimediaWidgets, QtMultimedia
-from GUI.linkeds_gui import WelcomeWindow, AppWindow
 from CLIENT.linkeds_client import ClientProtocol
-from CONFIG.config_init import ensure_client_config
+from CONFIG.config_init import ensure_client_cache, ensure_client_config
 
 ensure_client_config()
+ensure_client_cache()
 
 from CLIENT.client_config import *
+from GUI.linkeds_gui import WelcomeWindow, AppWindow
 
 
 class MainWork:
@@ -44,8 +45,8 @@ class MainWork:
         """
         Initialize GUI, running in another thread
         """
-        path = str(pathlib.Path().resolve()) + "/LinkedsMain/CACHE"
-        with open(path + '/auto_login.txt', 'r') as file:
+        path = project_root / "LinkedsMain" / "CACHE" / "auto_login.txt"
+        with open(path, 'r') as file:
             auto_login = file.read().split('\n')
 
         if auto_login[0] == "False":
@@ -90,10 +91,12 @@ class MainWork:
 if __name__ == '__main__':
     try:
         main = MainWork()
-        welcome_window = Thread(target=main.init_welcome_gui, daemon=True)
-        welcome_window.start()
-        main.run_client()
+        client = Thread(target=main.run_client, daemon=True)
+        client.start()
+        main.init_welcome_gui()
     except KeyboardInterrupt:
-        main.client_window.init_offline()
-        main.client_window.auto_login(True)
+        if main.client_window is not None and hasattr(main.client_window, 'init_offline'):
+            main.client_window.init_offline()
+        if main.client_window is not None:
+            main.client_window.auto_login(True)
         print('App closed')

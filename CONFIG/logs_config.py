@@ -8,5 +8,5 @@ BOLD_RED = "\x1b[41m"
 RESET = "\x1b[0m"
 LOGGER_FORMAT = "[%(asctime)s] [%(name)s] [%(levelname)s] -> %(message)s"
 
-path = str(pathlib.Path().resolve())
-LOGS_PATH = '\\'.join(path.split('\\')[:-1]) + "\\LOGS"
+PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[1]
+LOGS_PATH = PROJECT_ROOT / "LOGS"

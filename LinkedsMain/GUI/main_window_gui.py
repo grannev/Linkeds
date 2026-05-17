@@ -22,10 +22,11 @@ from LinkedsMain.CUSTOM_WIDGETS.custom_line_edit import StandardLineEdit
 from LinkedsMain.CUSTOM_WIDGETS.custom_layouts import StandardHLayout, StandardVLayout, LayoutWidget
 from LinkedsMain.CUSTOM_WIDGETS.custom_frames import FriendsFrame, MessengerFrame
 
-style_path = str(pathlib.Path().resolve()) + "\\CUSTOM_WIDGETS\\STYLES"
-with open(f'{style_path}\\dark_theme.сss', 'r') as style:
+APP_ROOT = pathlib.Path(__file__).resolve().parents[1]
+style_path = APP_ROOT / "CUSTOM_WIDGETS" / "STYLES"
+with open(style_path / 'dark_theme.сss', 'r') as style:
     DARK_THEME_STYLE = style.read()
-with open(f'{style_path}\\light_theme.сss', 'r') as style:
+with open(style_path / 'light_theme.сss', 'r') as style:
     LIGHT_THEME_STYLE = style.read()
 
 
@@ -68,34 +69,31 @@ class MainWindowGui(MainWindowWidget):
         self.auto_login(True)
 
     def init_images(self) -> None:
-        path = str(pathlib.Path().resolve()) + "\\IMAGES"
-        self.logo_image = QtGui.QPixmap(f"{path}\\icon_photo.png").scaled(120, 120, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
-        self.chat_dark = QtGui.QIcon(f"{path}\\chat_dark.png")
-        self.chat_light = QtGui.QIcon(f"{path}\\chat_light.png")
-        self.theme_dark = QtGui.QIcon(f"{path}\\theme_dark.png")
-        self.theme_light = QtGui.QIcon(f"{path}\\theme_light.png")
-        self.friends_dark = QtGui.QIcon(f"{path}\\add_user_dark.png")
-        self.friends_light = QtGui.QIcon(f"{path}\\add_user_light.png")
-        self.profile_light = QtGui.QIcon(f"{path}\\home_light.png")
-        self.profile_dark = QtGui.QIcon(f"{path}\\home_dark.png")
-        self.settings_light = QtGui.QIcon(f"{path}\\settings_light.png")
-        self.settings_dark = QtGui.QIcon(f"{path}\\settings_dark.png")
-        self.exit_light = QtGui.QIcon(f"{path}\\exit_light.png")
-        self.exit_dark = QtGui.QIcon(f"{path}\\exit_dark.png")
-        self.hideMenu_light = QtGui.QIcon(f"{path}\\hide_menu_light.png")
-        self.hideMenu_dark = QtGui.QIcon(f"{path}\\hide_menu_dark.png")
-        self.showMenu_light = QtGui.QIcon(f"{path}\\show_menu_light.png")
-        self.showMenu_dark = QtGui.QIcon(f"{path}\\show_menu_dark.png")
-        self.sendMessage_image = QtGui.QIcon(f"{path}\\send_message.png")
+        path = APP_ROOT / "IMAGES"
+        self.logo_image = QtGui.QPixmap(str(path / "icon_photo.png")).scaled(120, 120, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
+        self.chat_dark = QtGui.QIcon(str(path / "chat_dark.png"))
+        self.chat_light = QtGui.QIcon(str(path / "chat_light.png"))
+        self.theme_dark = QtGui.QIcon(str(path / "theme_dark.png"))
+        self.theme_light = QtGui.QIcon(str(path / "theme_light.png"))
+        self.friends_dark = QtGui.QIcon(str(path / "add_user_dark.png"))
+        self.friends_light = QtGui.QIcon(str(path / "add_user_light.png"))
+        self.profile_light = QtGui.QIcon(str(path / "home_light.png"))
+        self.profile_dark = QtGui.QIcon(str(path / "home_dark.png"))
+        self.settings_light = QtGui.QIcon(str(path / "settings_light.png"))
+        self.settings_dark = QtGui.QIcon(str(path / "settings_dark.png"))
+        self.exit_light = QtGui.QIcon(str(path / "exit_light.png"))
+        self.exit_dark = QtGui.QIcon(str(path / "exit_dark.png"))
+        self.hideMenu_light = QtGui.QIcon(str(path / "hide_menu_light.png"))
+        self.hideMenu_dark = QtGui.QIcon(str(path / "hide_menu_dark.png"))
+        self.showMenu_light = QtGui.QIcon(str(path / "show_menu_light.png"))
+        self.showMenu_dark = QtGui.QIcon(str(path / "show_menu_dark.png"))
+        self.sendMessage_image = QtGui.QIcon(str(path / "send_message.png"))
 
-        try:
-            static = open("images/pfp_image.png", 'rb')
-            static.close()
-            self.userPfp_image = QtGui.QPixmap("images/pfp_image.png").scaled(225, 225)
-            self.userPfp_image = self.round_image(self.userPfp_image)
-        except FileNotFoundError:
-            self.userPfp_image = QtGui.QPixmap("images/pfp_image_standard.png").scaled(225, 225)
-            self.userPfp_image = self.round_image(self.userPfp_image)
+        pfp_path = APP_ROOT / "CACHE" / "pfp_image.png"
+        if not pfp_path.exists():
+            pfp_path = APP_ROOT / "IMAGES" / "pfp_image_standard.png"
+        self.userPfp_image = QtGui.QPixmap(str(pfp_path)).scaled(225, 225)
+        self.userPfp_image = self.round_image(self.userPfp_image)
 
     def init_gui(self) -> None:
         self.clearFocus()

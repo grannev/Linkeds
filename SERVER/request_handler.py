@@ -26,6 +26,22 @@ class RequestHandler:
     def form_request(method, data):
         return {'method': method, 'data': data}
 
+    @staticmethod
+    def is_empty_blob(value) -> bool:
+        return value in (None, 'None', b'None')
+
+    @classmethod
+    def load_blob_list(cls, value) -> list:
+        if cls.is_empty_blob(value):
+            return []
+        return pickle.loads(value)
+
+    @staticmethod
+    def dump_blob_list(items: list):
+        if not items:
+            return b'None'
+        return pickle.dumps(items)
+
     def send_request(self, data) -> None:
         self._transport.write(pickle.dumps(data) + b"<END>")
 
@@ -53,29 +69,20 @@ class RequestHandler:
         sended = []
 
         user_social = self.database.select(table_name='social', id=user_data.get('id'))[0]
-        if user_social.get('friends') != b'None':
-            for friend in pickle.loads(user_social.get('friends')):
-                friend_id = friend.get('friend_id')
-                if friend_id in sended:
-                    continue
-                friend_social = self.database.select(table_name='social', id=friend_id)[0]
-                if self.send_request_if_online(self.form_request(
+        linked_users = (
+            self.load_blob_list(user_social.get('friends')) +
+            self.load_blob_list(user_social.get('request_friends'))
+        )
+        for friend in linked_users:
+            friend_id = friend.get('friend_id')
+            if friend_id in sended:
+                continue
+            friend_social = self.database.select(table_name='social', id=friend_id)[0]
+            if self.send_request_if_online(self.form_request(
                     '<SET-USER-SOCIAL>',
                     {'user_social': friend_social}
-                ), friend_id):
-                    sended.append(friend_id)
-
-        if user_social.get('request_friends') != b'None':
-            for friend in pickle.loads(user_social.get('request_friends')):
-                friend_id = friend.get('friend_id')
-                if friend_id in sended:
-                    continue
-                friend_social = self.database.select(table_name='social', id=friend_id)[0]
-                if self.send_request_if_online(self.form_request(
-                        '<SET-USER-SOCIAL>',
-                        {'user_social': friend_social}
-                ), friend_id):
-                    sended.append(friend_id)
+            ), friend_id):
+                sended.append(friend_id)
 
     def call_method(self, data):
         needed_data = data.get('data')
@@ -203,10 +210,10 @@ class RequestHandler:
         user_social = self.database.select(table_name='social', id=user_data.get('id'))[0]
         friends = user_social.get('friends')
 
-        if friends == b'None':
+        if self.is_empty_blob(friends):
             return self.form_request('<UPDATE-FRIENDS>', {'friends': 'None'})
 
-        friends = pickle.loads(friends)
+        friends = self.load_blob_list(friends)
         data_to_send = []
         for friend in friends:
             friend_id = friend.get('friend_id')
@@ -226,11 +233,11 @@ class RequestHandler:
         user_social = self.database.select(table_name='social', id=user_data.get('id'))[0]
 
         friends_requests = user_social.get('request_friends')
-        if friends_requests == b'None':
+        if self.is_empty_blob(friends_requests):
             return self.form_request('<UPDATE-REQUEST-FRIENDS>', {'friends_requests': 'None'})
 
         data_to_send = []
-        for friend_request in pickle.loads(friends_requests):
+        for friend_request in self.load_blob_list(friends_requests):
             friend_data = friend_request.get('friend_data')
             request_status = friend_request.get('request_status')
             friend_pfp_path = self.database.select(
@@ -248,11 +255,11 @@ class RequestHandler:
         user_social = self.database.select(table_name='social', id=user_data.get('id'))[0]
 
         black_list = user_social.get('black_list_friends')
-        if black_list == b"None" or black_list == 'None' or black_list is None:
+        if self.is_empty_blob(black_list):
             return self.form_request('<UPDATE-BLACK-LIST>', {'black_list': 'None'})
 
         data_to_send = []
-        for friend_bl in pickle.loads(black_list):
+        for friend_bl in self.load_blob_list(black_list):
             friend_data = self.database.select(table_name='user', id=friend_bl.get('friend_id'))[0]
             friend_pfp_path = self.database.select(
                 table_name='social', id=friend_data.get('id'))[0].get('pfp')
@@ -269,11 +276,11 @@ class RequestHandler:
         user_social = self.database.select(table_name='social', id=user_id)[0]
 
         friends = user_social.get('friends')
-        if friends == b'None':
+        if self.is_empty_blob(friends):
             return self.form_request('<UPDATE-CHATS>', {'chats': 'None'})
 
         chats = []
-        for friend in pickle.loads(friends):
+        for friend in self.load_blob_list(friends):
             friend_id = friend.get('friend_id')
             messages = self.database.load_messages(friend_id, user_id)
             friend_data = self.database.select(table_name='user', id=friend_id)[0]
@@ -390,10 +397,10 @@ class RequestHandler:
                 {'reason': 'Аккаунт этого пользователя заблокирован/удалён'}
             )
         # Adding to user_social[request_friends] new request
-        if user_social.get('request_friends') == b'None':
+        if self.is_empty_blob(user_social.get('request_friends')):
             static = pickle.dumps([{'friend_data': friend_data, 'request_status': 'sender', 'friend_id': friend_id}])
         else:
-            request_friends = pickle.loads(user_social.get('request_friends'))
+            request_friends = self.load_blob_list(user_social.get('request_friends'))
             for request in request_friends:
                 if int(friend_id) == int(request.get('friend_id')):
                     if request.get('request_status') == 'sender':
@@ -411,10 +418,10 @@ class RequestHandler:
                                     subject='request_friends', subject_value=static)
 
         # Adding to friend_social[request_friends] new request
-        if friend_social.get('request_friends') == b'None':
+        if self.is_empty_blob(friend_social.get('request_friends')):
             static = pickle.dumps([{'friend_data': user_data, 'request_status': 'receiver', 'friend_id': user_id}])
         else:
-            request_friends = pickle.loads(friend_social.get('request_friends'))
+            request_friends = self.load_blob_list(friend_social.get('request_friends'))
             request_friends.append({'friend_data': user_data, 'request_status': 'receiver', 'friend_id': user_id})
             static = pickle.dumps(request_friends)
         self.database.update_binary(table_name='social', id=friend_id,
@@ -445,45 +452,39 @@ class RequestHandler:
         friend_data = self.database.select(table_name='user', id=friend_id)[0]
         friend_social = self.database.select(table_name='social', id=friend_id)[0]
 
-        if user_social.get('friends') == b'None':
+        if self.is_empty_blob(user_social.get('friends')):
             static = pickle.dumps([{'friend_data': friend_data, 'friend_id': friend_id}])
         else:
-            friends = pickle.loads(user_social.get('friends'))
+            friends = self.load_blob_list(user_social.get('friends'))
             friends.append({'friend_data': friend_data, 'friend_id': friend_id})
             static = pickle.dumps(friends)
         self.database.update_binary(
             table_name='social', id=user_id, subject='friends', subject_value=static)
 
-        request_friends = pickle.loads(user_social.get('request_friends'))
+        request_friends = self.load_blob_list(user_social.get('request_friends'))
         for request in request_friends:
             if int(request.get('friend_id')) == int(friend_id):
                 del request_friends[request_friends.index(request)]
-                if not request_friends:
-                    request_friends = b'None'
-                    break
-                request_friends = pickle.dumps(request_friends)
                 break
+        request_friends = self.dump_blob_list(request_friends)
         self.database.update_binary(
             table_name='social', id=user_id, subject='request_friends', subject_value=request_friends)
 
-        if friend_social.get('friends') == b'None':
+        if self.is_empty_blob(friend_social.get('friends')):
             static = pickle.dumps([{'friend_data': user_data, 'friend_id': user_id}])
         else:
-            friends = pickle.loads(friend_social.get('friends'))
+            friends = self.load_blob_list(friend_social.get('friends'))
             friends.append({'friend_data': user_data, 'friend_id': user_id})
             static = pickle.dumps(friends)
         self.database.update_binary(
             table_name='social', id=friend_id, subject='friends', subject_value=static)
 
-        request_friends = pickle.loads(friend_social.get('request_friends'))
+        request_friends = self.load_blob_list(friend_social.get('request_friends'))
         for request in request_friends:
             if int(request.get('friend_id')) == int(user_id):
                 del request_friends[request_friends.index(request)]
-                if not request_friends:
-                    request_friends = b'None'
-                    break
-                request_friends = pickle.dumps(request_friends)
                 break
+        request_friends = self.dump_blob_list(request_friends)
         self.database.update_binary(
             table_name='social', id=friend_id, subject='request_friends', subject_value=request_friends)
 
@@ -509,27 +510,21 @@ class RequestHandler:
 
         friend_social = self.database.select(table_name='social', id=friend_id)[0]
 
-        request_friends = pickle.loads(user_social.get('request_friends'))
+        request_friends = self.load_blob_list(user_social.get('request_friends'))
         for request in request_friends:
             if int(request.get('friend_id')) == int(friend_id):
                 del request_friends[request_friends.index(request)]
-                if not request_friends:
-                    request_friends = b'None'
-                    break
-                request_friends = pickle.dumps(request_friends)
                 break
+        request_friends = self.dump_blob_list(request_friends)
         self.database.update_binary(
             table_name='social', id=user_id, subject='request_friends', subject_value=request_friends)
 
-        request_friends = pickle.loads(friend_social.get('request_friends'))
+        request_friends = self.load_blob_list(friend_social.get('request_friends'))
         for request in request_friends:
             if int(request.get('friend_id')) == int(user_id):
                 del request_friends[request_friends.index(request)]
-                if not request_friends:
-                    request_friends = b'None'
-                    break
-                request_friends = pickle.dumps(request_friends)
                 break
+        request_friends = self.dump_blob_list(request_friends)
         self.database.update_binary(
             table_name='social', id=friend_id, subject='request_friends', subject_value=request_friends)
 
@@ -553,10 +548,10 @@ class RequestHandler:
         friend_id = data.get('friend_id')
         friend_social = self.database.select(table_name='social', id=friend_id)[0]
 
-        if user_social.get('black_list_friends') in (b"None", 'None', None):
+        if self.is_empty_blob(user_social.get('black_list_friends')):
             static = pickle.dumps([{'friend_id': friend_id}])
         else:
-            black_list_friends = pickle.loads(user_social.get('black_list_friends'))
+            black_list_friends = self.load_blob_list(user_social.get('black_list_friends'))
             black_list_friends.append({'friend_id': friend_id})
             static = pickle.dumps(black_list_friends)
         self.database.update_binary(
@@ -574,27 +569,21 @@ class RequestHandler:
 
         friend_social = self.database.select(table_name='social', id=friend_id)[0]
 
-        friends = pickle.loads(user_social.get('friends'))
+        friends = self.load_blob_list(user_social.get('friends'))
         for friend in friends:
             if int(friend.get('friend_id')) == int(friend_id):
                 del friends[friends.index(friend)]
-                if not friends:
-                    friends = b'None'
-                    break
-                friends = pickle.dumps(friends)
                 break
+        friends = self.dump_blob_list(friends)
         self.database.update_binary(
             table_name='social', id=user_id, subject='friends', subject_value=friends)
 
-        friends = pickle.loads(friend_social.get('friends'))
+        friends = self.load_blob_list(friend_social.get('friends'))
         for friend in friends:
             if int(friend.get('friend_id')) == int(user_id):
                 del friends[friends.index(friend)]
-                if not friends:
-                    friends = b'None'
-                    break
-                friends = pickle.dumps(friends)
                 break
+        friends = self.dump_blob_list(friends)
         self.database.update_binary(
             table_name='social', id=friend_id, subject='friends', subject_value=friends)
 
@@ -617,15 +606,12 @@ class RequestHandler:
         friend_id = data.get('friend_id')
         user_id = user_social.get('id')
 
-        black_list = pickle.loads(user_social.get('black_list_friends'))
+        black_list = self.load_blob_list(user_social.get('black_list_friends'))
         for friend in black_list:
             if int(friend.get('friend_id')) == int(friend_id):
                 del black_list[black_list.index(friend)]
-                if not black_list:
-                    black_list = b'None'
-                    break
-                black_list = pickle.dumps(black_list)
                 break
+        black_list = self.dump_blob_list(black_list)
         self.database.update_binary(
             table_name='social', id=user_id, subject='black_list_friends', subject_value=black_list)
 

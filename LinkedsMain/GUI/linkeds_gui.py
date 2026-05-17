@@ -5,10 +5,11 @@ if __name__ == '__main__':
     print('Do not run from NotMain application')
     exit()
 
-style_path = str(pathlib.Path().resolve()) + "\\CUSTOM_WIDGETS\\STYLES"
-with open(f'{style_path}\\dark_theme.сss', 'r') as style:
+APP_ROOT = pathlib.Path(__file__).resolve().parents[1]
+style_path = APP_ROOT / "CUSTOM_WIDGETS" / "STYLES"
+with open(style_path / 'dark_theme.сss', 'r') as style:
     DARK_THEME_STYLE = style.read()
-with open(f'{style_path}\\light_theme.сss', 'r') as style:
+with open(style_path / 'light_theme.сss', 'r') as style:
     LIGHT_THEME_STYLE = style.read()
 
 
@@ -392,12 +393,12 @@ class AppWindow(MainWindowGui, StaticMethods):
 
     def auto_login(self, activate):
         if activate:
-            path = str(pathlib.Path().resolve()) + "\\CACHE"
-            with open(path + '\\auto_login.txt', 'w') as file:
+            path = APP_ROOT / "CACHE" / "auto_login.txt"
+            with open(path, 'w') as file:
                 file.write("True\n" + str(self.user_data.get('id')) + '\n' + str(self.user_data.get('password')))
         if not activate:
-            path = str(pathlib.Path().resolve()) + "\\CACHE"
-            with open(path + '\\auto_login.txt', 'w') as file:
+            path = APP_ROOT / "CACHE" / "auto_login.txt"
+            with open(path, 'w') as file:
                 file.write("False\n")
 
     @pyqtSlot()
@@ -425,10 +426,12 @@ class AppWindow(MainWindowGui, StaticMethods):
     @pyqtSlot()
     def update_pfp(self, data):
         image_bytes = data.get('image_bytes')
-        with open("images/pfp_image.png", 'wb') as image:
+        pfp_path = APP_ROOT / "CACHE" / "pfp_image.png"
+        pfp_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(pfp_path, 'wb') as image:
             image.write(image_bytes)
 
-        self.userPfp_image = QtGui.QPixmap("images/pfp_image.png").scaled(225, 225)
+        self.userPfp_image = QtGui.QPixmap(str(pfp_path)).scaled(225, 225)
         self.userPfp_image = self.round_image(self.userPfp_image)
         self.profilePfp_label.setPixmap(self.userPfp_image)
 
