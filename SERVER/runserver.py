@@ -1,8 +1,8 @@
 import sys
 import pathlib
 
-path = '\\'.join(str(pathlib.Path().resolve()).split('\\')[:-1])
-sys.path.insert(0, f'{path}')
+project_root = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(project_root))
 
 import logging
 import asyncio
@@ -12,6 +12,10 @@ from asyncio import BaseTransport, Protocol
 from threading import Thread
 from request_handler import RequestHandler
 from LOGS.logger import init_logger
+from CONFIG.config_init import ensure_server_config
+
+ensure_server_config()
+
 from CONFIG.server_config import SERVER_IP, SERVER_PORT
 from DATABASE.database import Database
 

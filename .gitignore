@@ -1,11 +1,63 @@
-.idea
-/**/__pycache__/
-/TESTS
-/LOGS/server_logs.log
-/LinkedsMain/IMAGES/pfp_image.png
-/LinkedsMain/IMAGES/friends_images/
-/LinkedsMain/CLIENT/client_config.py
-/LinkedsMain/static.png
-/DATABASE/chat_storage/
-/DATABASE/post_storage/
-/DATABASE/pfp_storage/
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments and local tooling
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# IDE/editor/system files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+desktop.ini
+.DS_Store
+
+# Test/type/lint caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Logs and runtime output
+LOGS/*.log
+*.log
+
+# Local application state
+LinkedsMain/CACHE/
+LinkedsMain/static.png
+LinkedsMain/images/
+LinkedsMain/IMAGES/pfp_image.png
+
+# Local configuration with machine-specific values/secrets
+CONFIG/database_config.py
+CONFIG/server_config.py
+!CONFIG/database_config.example.py
+!CONFIG/server_config.example.py
+LinkedsMain/CLIENT/client_config.py
+!LinkedsMain/CLIENT/client_config.example.py
+
+# Database/user-generated storage
+DATABASE/pfp_storage/
+DATABASE/chat_storage/
+DATABASE/post_storage/
+
+# Local database dumps/archives
+*.rar
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.sql
+
+# Agent-local workspace metadata
+.agents/
+.codex/

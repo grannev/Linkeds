@@ -1,6 +1,10 @@
 import pymysql
 import pathlib
 from operator import itemgetter
+from CONFIG.config_init import ensure_database_config
+
+ensure_database_config()
+
 from CONFIG.database_config import *
 from DATABASE.user_config import User, Social, Connection, Message
 

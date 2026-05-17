@@ -3,14 +3,18 @@ import sys
 import pathlib
 import asyncio
 
-path = '\\'.join(str(pathlib.Path().resolve()).split('\\')[:-1])
-sys.path.insert(0, f'{path}')
+project_root = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(project_root))
 
 from asyncio import Protocol, BaseProtocol
 from threading import Thread
 from PyQt6 import QtWidgets, QtCore, QtGui, QtMultimediaWidgets, QtMultimedia
 from GUI.linkeds_gui import WelcomeWindow, AppWindow
 from CLIENT.linkeds_client import ClientProtocol
+from CONFIG.config_init import ensure_client_config
+
+ensure_client_config()
+
 from CLIENT.client_config import *
 
 
@@ -40,8 +44,8 @@ class MainWork:
         """
         Initialize GUI, running in another thread
         """
-        path = str(pathlib.Path().resolve()) + "\\CACHE"
-        with open(path + '\\auto_login.txt', 'r') as file:
+        path = str(pathlib.Path().resolve()) + "/LinkedsMain/CACHE"
+        with open(path + '/auto_login.txt', 'r') as file:
             auto_login = file.read().split('\n')
 
         if auto_login[0] == "False":
